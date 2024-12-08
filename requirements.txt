@@ -1,8 +1,9 @@
 pandas==2.0.3
-numpy==1.24.4
+numpy>=1.26.0,<2.0.0
 streamlit==1.28.2
 streamlit-option-menu==0.3.6
 scikit-learn==0.23.2
-tensorflow>=2.8.0
-matplotlib==3.7.4
+tensorflow>=2.14.0,<2.15.0
+matplotlib==3.7.1
 openpyxl
+setuptools>=67.0.0
