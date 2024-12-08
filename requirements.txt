@@ -3,7 +3,7 @@ numpy==1.24.3
 streamlit==1.26.0
 streamlit-option-menu==0.3.6
 scikit-learn==1.2.2
-tensorflow-cpu==2.13.0
+tensorflow==2.13.0
 matplotlib==3.7.1
 openpyxl
 setuptools>=65.0
