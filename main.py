@@ -6,7 +6,6 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-import tensorflow as tf
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 import numpy as np
