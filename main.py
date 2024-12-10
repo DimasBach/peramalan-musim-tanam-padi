@@ -123,139 +123,76 @@ if (selected == 'Preprocessing'):
         st.write(lagged_data)
 
 # Menu Modelling
-if (selected == 'Modelling'):
+if selected == 'Modelling':
     st.title("Model Terbaik")
+
+    # Menampilkan hasil model terbaik
+    learning_rate = 1.0
+    n_hidden_layers = 5
+    best_neurons = 10
+    best_mape = 0.40747792867862026
+    best_mse = 0.007769943129798958
+    best_rmse = 0.08806215051092786
+
+    st.write("### Model Terbaik yang Diperoleh:")
+    st.write(f"Learning rate: {learning_rate}")
+    st.write(f"Jumlah hidden layer: {n_hidden_layers}")
+    st.write(f"Jumlah neuron per hidden layer: {best_neurons}")
+    st.write(f"MAPE: {best_mape}")
+    st.write(f"MSE: {best_mse}")
+    st.write(f"RMSE: {best_rmse}")
+
+    # Data hasil evaluasi
+    neurons = list(range(1, 11))
+    mape_values = [
+        20423916945395.94, 37261079084355.19, 5369255493.604682, 
+        2981415241.7340407, 14135998.266705928, 4189395111.0605016, 
+        9950668.047627462, 6720192.984157499, 6260.474182724277, 
+        0.40747792867862026
+    ]
+    mse_values = [
+        0.0074503978531068925, 0.007468252973203838, 0.007769819769491974,
+        0.007769872493729609, 0.007769942792408822, 0.007769852438575209,
+        0.00776994291429094, 0.007769942970547447, 0.00776994312965061,
+        0.007769943129798958
+    ]
+    rmse_values = [
+        0.08606892663435783, 0.08630405501125032, 0.08806147051115798,
+        0.08806172577118167, 0.08806214856099807, 0.08806163774568794,
+        0.08806214929251997, 0.08806214955323761, 0.08806215051003574,
+        0.08806215051092786
+    ]
+
+    # Membuat grafik
+    fig_mape, ax_mape = plt.subplots(figsize=(6, 4))
+    ax_mape.plot(neurons, mape_values, marker='o', label="MAPE")
+    ax_mape.set_title("MAPE vs Jumlah Neuron")
+    ax_mape.set_xlabel("Jumlah Neuron per Hidden Layer")
+    ax_mape.set_ylabel("MAPE")
+    ax_mape.grid()
+    ax_mape.legend()
+    st.pyplot(fig_mape)
+
+
+    fig_mse, ax_mse = plt.subplots(figsize=(6, 4))
+    ax_mse.plot(neurons, mse_values, marker='o', color='orange', label="MSE")
+    ax_mse.set_title("MSE vs Jumlah Neuron")
+    ax_mse.set_xlabel("Jumlah Neuron per Hidden Layer")
+    ax_mse.set_ylabel("MSE")
+    ax_mse.grid()
+    ax_mse.legend()
+    st.pyplot(fig_mse)
+
+
+    fig_rmse, ax_rmse = plt.subplots(figsize=(6, 4))
+    ax_rmse.plot(neurons, rmse_values, marker='o', color='green', label="RMSE")
+    ax_rmse.set_title("RMSE vs Jumlah Neuron")
+    ax_rmse.set_xlabel("Jumlah Neuron per Hidden Layer")
+    ax_rmse.set_ylabel("RMSE")
+    ax_rmse.grid()
+    ax_rmse.legend()
+    st.pyplot(fig_rmse)
     
-    # Memuat data lagged yang sudah disimpan
-    lagged_data = pd.read_excel("lagged_data.xlsx")
-
-    # Memisahkan fitur dan target
-    X = lagged_data.drop(columns=["Target"])
-    y = lagged_data["Target"]
-
-    # Membagi data menjadi data latih (80%) dan data uji (20%)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Menentukan parameter pengujian
-    n_neurons_options = range(1, 11)  # Jumlah neuron per hidden layer dari 1 hingga 10
-    n_hidden_layers = 5  # Hidden layers terbaik dari pengujian sebelumnya
-    learning_rate = 1.0  # Learning rate terbaik dari pengujian sebelumnya
-    epochs = 100
-    k_folds = 3
-
-    # Menyimpan hasil evaluasi untuk setiap jumlah neuron per hidden layer
-    results = {}
-    best_mape = float('inf')  # Menyimpan MAPE terbaik
-    best_mse = float('inf')  # Menyimpan MSE terbaik
-    best_rmse = float('inf')  # Menyimpan RMSE terbaik
-    best_model = None
-    best_neurons = None
-
-    # Cross-validation
-    kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
-
-    for n_neurons in n_neurons_options:
-        print(f"\nEvaluating for {n_neurons} neurons per layer")
-        mape_scores, mse_scores, rmse_scores = [], [], []
-
-        for train_index, val_index in kf.split(X_train):
-            # Membagi data latih dan data validasi untuk fold ini
-            X_fold_train, X_fold_val = X_train.iloc[train_index], X_train.iloc[val_index]
-            y_fold_train, y_fold_val = y_train.iloc[train_index], y_train.iloc[val_index]
-
-            # Definisikan model backpropagation
-            model = tf.keras.Sequential()
-            model.add(tf.keras.layers.InputLayer(input_shape=(X_fold_train.shape[1],)))
-
-            # Menambahkan 3 hidden layers dengan jumlah neuron yang bervariasi
-            for _ in range(n_hidden_layers):
-                model.add(tf.keras.layers.Dense(n_neurons, activation='sigmoid'))
-
-            # Output layer
-            model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
-
-            # Kompilasi model dengan optimizer dan learning rate yang tetap
-            model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-                        loss='mse', metrics=['mse'])
-
-            # Melatih model
-            model.fit(X_fold_train, y_fold_train, epochs=epochs, verbose=0)
-
-            # Evaluasi pada data validasi
-            y_pred_val = model.predict(X_fold_val)
-            mape_scores.append(mean_absolute_percentage_error(y_fold_val, y_pred_val))
-            mse_scores.append(mean_squared_error(y_fold_val, y_pred_val))
-            rmse_scores.append(np.sqrt(mean_squared_error(y_fold_val, y_pred_val)))
-
-        # Menyimpan hasil rata-rata evaluasi untuk setiap jumlah neuron
-        avg_mape = np.mean(mape_scores)
-        avg_mse = np.mean(mse_scores)
-        avg_rmse = np.mean(rmse_scores)
-
-        results[n_neurons] = {
-            'MAPE': avg_mape,
-            'MSE': avg_mse,
-            'RMSE': avg_rmse
-        }
-        # print(f"Neurons per layer: {n_neurons} - MAPE: {avg_mape}, MSE: {avg_mse}, RMSE: {avg_rmse}")
-
-        # Simpan model terbaik berdasarkan nilai MAPE
-        if avg_mape < best_mape:
-            best_mape = avg_mape
-            best_mse = avg_mse
-            best_rmse = avg_rmse
-            best_model = model
-            best_neurons = n_neurons
-
-    # Menyimpan model terbaik dengan pickle
-    with open("best_model_neurons.pkl", "wb") as f:
-        pickle.dump(best_model, f)
-        
-
-    st.write(f"\nModel terbaik yang diperoleh :")
-    st.write(f"Learning rate : {learning_rate}")
-    st.write(f"Hidden layer : {n_hidden_layers}")
-    st.write(f"Hidden Neuron : {best_neurons}")
-    st.write(f"MAPE : {best_mape}")
-    st.write(f"MSE : {best_mse}")
-    st.write(f"RMSE : {best_rmse}")
-
-    # Visualisasi hasil pengujian jumlah neuron dalam bentuk grafik
-    neurons_list = list(results.keys())
-    mape_values = [metrics['MAPE'] for metrics in results.values()]
-    mse_values = [metrics['MSE'] for metrics in results.values()]
-    rmse_values = [metrics['RMSE'] for metrics in results.values()]
-
-    # Plot untuk MAPE
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(neurons_list, mape_values, label='MAPE', marker='o')
-    ax.set_xlabel("Jumlah Neuron per Hidden Layer")
-    ax.set_ylabel("MAPE")
-    ax.set_title("Pengaruh Jumlah Neuron per Hidden Layer terhadap MAPE")
-    ax.legend()
-    ax.grid()
-    st.pyplot(fig)
-
-    # Plot untuk MSE
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(neurons_list, mse_values, label='MSE', marker='o', color='orange')
-    ax.set_xlabel("Jumlah Neuron per Hidden Layer")
-    ax.set_ylabel("MSE")
-    ax.set_title("Pengaruh Jumlah Neuron per Hidden Layer terhadap MSE")
-    ax.legend()
-    ax.grid()
-    st.pyplot(fig)
-
-    # Plot untuk RMSE
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(neurons_list, rmse_values, label='RMSE', marker='o', color='green')
-    ax.set_xlabel("Jumlah Neuron per Hidden Layer")
-    ax.set_ylabel("RMSE")
-    ax.set_title("Pengaruh Jumlah Neuron per Hidden Layer terhadap RMSE")
-    ax.legend()
-    ax.grid()
-    st.pyplot(fig)
-
 # Menu Prediction
 if (selected == 'Prediction'):
     st.title("Prediksi")
